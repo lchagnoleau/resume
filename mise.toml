@@ -2,32 +2,47 @@
 typst = "0.15.1"
 
 [env]
+# Both documents import common/ and assets/, so compile from the repo root
+TYPST_ROOT = "{{config_root}}"
 TYPST_FONT_PATHS = "{{config_root}}/fonts"
 TYPST_IGNORE_SYSTEM_FONTS = "true"
 
 [tasks.fonts]
-description = "Download the fonts used by the CV into fonts/"
+description = "Download the fonts used by the documents into fonts/"
 run = "[ -f fonts/texgyreheros-regular.otf ] || scripts/fetch-fonts.sh"
 
-[tasks.build]
-description = "Compile the CV (default output: cv.pdf)"
+[tasks."build:resume"]
+description = "Compile the resume to dist/"
 depends = ["fonts"]
-usage = 'arg "[output]" default="cv.pdf"'
-run = "typst compile cv.typ ${usage_output}"
+run = "mkdir -p dist && typst compile resume/cv.typ dist/Loic_Chagnoleau_CV.pdf"
 
-[tasks.watch]
-description = "Recompile the CV on every change"
+[tasks."build:portfolio"]
+description = "Compile the portfolio to dist/"
 depends = ["fonts"]
-run = "typst watch cv.typ cv.pdf"
+run = "mkdir -p dist && typst compile portfolio/portfolio.typ dist/Loic_Chagnoleau_Portfolio.pdf"
+
+[tasks.build]
+description = "Compile the resume and the portfolio to dist/"
+depends = ["build:resume", "build:portfolio"]
+
+[tasks."watch:resume"]
+description = "Recompile the resume on every change"
+depends = ["fonts"]
+run = "mkdir -p dist && typst watch resume/cv.typ dist/Loic_Chagnoleau_CV.pdf"
+
+[tasks."watch:portfolio"]
+description = "Recompile the portfolio on every change"
+depends = ["fonts"]
+run = "mkdir -p dist && typst watch portfolio/portfolio.typ dist/Loic_Chagnoleau_Portfolio.pdf"
 
 [tasks.check]
-description = "Fail if the CV does not fit on a single page"
+description = "Fail if the resume does not fit on a single page"
 depends = ["fonts"]
 run = '''
 tmp=$(mktemp -d)
-typst compile --format png --ppi 10 cv.typ "$tmp/page-{p}.png"
+typst compile --format png --ppi 10 resume/cv.typ "$tmp/page-{p}.png"
 pages=$(ls "$tmp" | wc -l | tr -d ' ')
 rm -rf "$tmp"
-[ "$pages" -eq 1 ] || { echo "CV is $pages pages long, expected 1"; exit 1; }
-echo "CV fits on one page"
+[ "$pages" -eq 1 ] || { echo "Resume is $pages pages long, expected 1"; exit 1; }
+echo "Resume fits on one page"
 '''

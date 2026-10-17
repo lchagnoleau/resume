@@ -1,3 +1,5 @@
 fonts/
+dist/
+tmp/
 *.pdf
 *.png

@@ -1,22 +1,16 @@
 #import "template.typ": *
 
 #show: cv.with(
-  first-name: "Loïc",
-  last-name: "Chagnoleau",
-  photo: cropped-image(
-    read("assets/me.jpg", encoding: none),
-    size: (1119, 689),
-    trim: (350, 150, 10, 200),
-  ),
-  headline: [Senior Embedded Software Engineer],
-  summary: [12 years taking embedded software from source code to reliable devices in the field: secure boot, OTA updates, CI/CD and HIL testing.],
+  first-name: me.first-name,
+  last-name: me.last-name,
+  photo: my-photo,
+  headline: me.headline,
+  summary: me.summary,
   sidebar: [
     #meta-section("Contact")[
-      #contact("location-dot")[Toulouse, France]
-      #contact("paper-plane", link-to: "mailto:lchagnoleau@pm.me")[lchagnoleau\@pm.me]
-      #contact("globe", link-to: "https://lchagnoleau.dev")[lchagnoleau.dev]
-      #contact("linkedin", link-to: "https://www.linkedin.com/in/lo%C3%AFc-chagnoleau-899b13b7")[in/loïc-chagnoleau]
-      #contact("github", link-to: "https://github.com/lchagnoleau")[github.com/lchagnoleau]
+      #for (icon, label, url) in me.contacts {
+        side-contact(icon, label, link-to: url)
+      }
     ]
 
     #meta-section("Skills")[
@@ -113,7 +107,7 @@
   )
 ]
 
-#cv-event(role: [Embedded Software Engineer])[06/2015 – 09/2020][Sigfox, Toulouse][
+#cv-event(role: [Embedded Software Engineer])[06/2014 – 09/2020][Sigfox, Toulouse][
   #cv-exp(
     [Test automation for base stations and radio testers],
     [Built test and characterization benches for base stations: embedded C++ test automation, Python control of lab instruments (spectrum analyzers, power supplies). Designed a network coverage tester (hardware, drivers, UI).],
