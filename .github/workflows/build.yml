@@ -1,0 +1,56 @@
+name: Build CV
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Installs the tools pinned in mise.toml (typst)
+      - uses: jdx/mise-action@v5
+
+      - name: Cache fonts
+        uses: actions/cache@v6
+        with:
+          path: fonts
+          key: fonts-${{ hashFiles('scripts/fetch-fonts.sh') }}
+
+      - name: Compile CV
+        run: mise run build Loic_Chagnoleau_CV.pdf
+
+      - name: Check page count
+        run: mise run check
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: cv
+          path: Loic_Chagnoleau_CV.pdf
+
+      # Rolling "latest" release, updated on every push to main
+      - name: Publish latest release
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git tag -f latest
+          git push -f origin latest
+          gh release view latest >/dev/null 2>&1 \
+            || gh release create latest --title "Latest CV" --notes "Built from main." --prerelease
+          gh release upload latest Loic_Chagnoleau_CV.pdf --clobber
+
+      # Versioned release when pushing a v* tag
+      - name: Publish tagged release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" Loic_Chagnoleau_CV.pdf --title "CV ${GITHUB_REF_NAME}" --generate-notes

@@ -1,0 +1,33 @@
+[tools]
+typst = "0.15.1"
+
+[env]
+TYPST_FONT_PATHS = "{{config_root}}/fonts"
+TYPST_IGNORE_SYSTEM_FONTS = "true"
+
+[tasks.fonts]
+description = "Download the fonts used by the CV into fonts/"
+run = "[ -f fonts/texgyreheros-regular.otf ] || scripts/fetch-fonts.sh"
+
+[tasks.build]
+description = "Compile the CV (default output: cv.pdf)"
+depends = ["fonts"]
+usage = 'arg "[output]" default="cv.pdf"'
+run = "typst compile cv.typ ${usage_output}"
+
+[tasks.watch]
+description = "Recompile the CV on every change"
+depends = ["fonts"]
+run = "typst watch cv.typ cv.pdf"
+
+[tasks.check]
+description = "Fail if the CV does not fit on a single page"
+depends = ["fonts"]
+run = '''
+tmp=$(mktemp -d)
+typst compile --format png --ppi 10 cv.typ "$tmp/page-{p}.png"
+pages=$(ls "$tmp" | wc -l | tr -d ' ')
+rm -rf "$tmp"
+[ "$pages" -eq 1 ] || { echo "CV is $pages pages long, expected 1"; exit 1; }
+echo "CV fits on one page"
+'''
